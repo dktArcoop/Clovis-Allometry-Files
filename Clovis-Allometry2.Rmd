@@ -1,0 +1,262 @@
+---
+title: "Clovis Allometry"
+author: "David K. Thulman"
+date: "5/15/2020"
+output: html_document
+---
+This R code creates most of the figures and tables in the Clovis Point Allometry: Exploring Shape Variation with Landmark-based Geometric Morphometrics. 
+
+It uses two packages beyond the basic R packages: (1) geomorph and (2) Hmisc. To start, load those packages.
+
+```{r}
+library(geomorph)
+library(Hmisc)
+```
+Now, set the working directory to the GitHub repository: https://github.com/dktArcoop/Clovis-Allometry-Files
+
+```{r}
+setwd("D:/Documents/Analysis V/Allometry Project Final Images")
+```
+
+The first step is to set up the background files in geomorph. These first files will be the tps file for the 23 Landmark (LM) configuration, which is aligned with a GPA and converted into a geomorph dataframe. Second, a csv file will be uploaded and appended to the dataframe. The natural logs for several measurements will created in the dataframe. 
+
+```{r}
+CAP23<-readland.tps("CAP23.tps", specID = "ID") #creates new file with 23LM tps data
+
+Z.gpa<-gpagen(CAP23) #Procrustes alignment renamed as Z.gpa
+
+groups<-read.csv("APF Cache.csv",header=TRUE,stringsAsFactors = TRUE) #reads in the classifier data
+
+CAP23.gdf <- geomorph.data.frame(Z.gpa) #creates a dataframe from the 23LM gpagen output
+
+CAP23.gdf<-append(CAP23.gdf, groups) #appends groups factors to the dataframe created from Z.gpa, keeps same name
+
+CAP23.gdf$lnCZE <- log(CAP23.gdf$Csize) #Creates new column with log of Centroid Size
+CAP23.gdf$lnCZS <- log(CAP23.gdf$StemCZ) #Creates new column with log of Blade centroid Size
+CAP23.gdf$lnCZB <- log(CAP23.gdf$BladeCZ) #Creates new column with log of Stem Centroid Size
+```
+Now, the Mean Shape of the data will be created, along with a links file that connects the LMs. The links file is created with an interactive function and has been disabled. A previously created links file is included.
+```{r}
+MS <- mshape(CAP23.gdf$coords) #creates mean shape and labels LMs 
+par(mfcol = c(1,1))#sets single-plot option
+#EMSL<- define.links(MS) #create a links file named EMSL. Interactive function disabled
+EMSL <- read.csv("EMSL.csv")
+CAP23.gdf<-append(CAP23.gdf, EMSL) #append the links file EMSL to the dataframe
+plot(MS, links=EMSL) #Plots mean shape [Figure 2A]
+```
+
+A plot of the distribution of aligned LMs from the 100 Clovis points is created.
+
+```{r}
+plotAllSpecimens(CAP23.gdf$coords, mean=TRUE, plot.param = list(pt.cex=.6), links=EMSL) #Distibution of LMs from all specimens with the links file [Figure 3A]
+```
+
+This plots the reference shape (the mean shape) to one of the larger Clovis points to illustrate the vector displacement of LMs.
+
+```{r}
+plotRefToTarget(MS, CAP23.gdf$coords[,,11], links=EMSL, method="vector") #vector displacement from mean to specimen 11 [Figure 6A]
+#mtext("Vector Displacement") #title disabled
+```
+
+This creates a PCA with wiregrid illustrations of points on the max and min points of PCA1. This was not a figure in the paper.
+
+```{r}
+plotTangentSpace(CAP23.gdf$coords, groups=CAP23.gdf$Cache)#creates PCA plot with max and min images on PC1, colors for non-cacke (red) and cache (black)
+```
+
+The Allometry Analysis. This creates Figure 5.
+
+```{r}
+attach(CAP23.gdf)
+color = rep(NA, length=length(CAP23.gdf$Cache)) #colors cache and non-cache dots in plot
+color[which(CAP23.gdf$Cache=="Cache")] = "black"
+color[which(CAP23.gdf$Cache=="Other")] = "red"
+color #check to determine color designations are correct
+
+CAP23CS <- procD.lm(coords~ log(Csize), data=CAP23.gdf, iter=10000, RRPP=TRUE, print.progress = FALSE) #names regression of coords on log Centroid size
+plotAllometry(CAP23CS, size=CAP23.gdf$lnCZE,  method = "PredLine", col=color, pch=19, bg=CAP23.gdf$Cache, xlab="Ln Centroid Size") #plots the Prediction Line
+CAPlnCS <- plotAllometry(CAP23CS, size=CAP23.gdf$lnCZE,  method = "PredLine", col=color, pch=19, bg=CAP23.gdf$Cache, xlab="Ln Centroid Size") #plots the Prediction Line
+#picknplot.shape(CAPlnCS) #creates the small inserts for Figure 4, interaction function disabled
+```
+
+Creates the ANOVA results in Table 2 illustrating the presence of allometry and amount of change (r2) for log normal of the entire, stem, and base centroid sizes. 
+
+```{r}
+
+CAP23CS.anova <- anova(CAP23CS) #calculates the anova of the Clovis Allometry on log Centroid Size. CAP23CS is linear regression object created above
+summary(CAP23CS.anova) #summary of the ANOVA results against the null of isometric change
+
+CAP23SCS <- procD.lm(coords~ lnCZS, data=CAP23.gdf, iter=10000, RRPP=TRUE, print.progress = FALSE) #regression on of entire shape on log stem centroid size. Stem CS calculated below and then included in the "groups.csv" 
+CAP23SCS.anova <- anova(CAP23SCS) #calculates the anova 
+summary(CAP23SCS.anova) #summary of the ANOVA results against the null of isometric change
+
+CAP23BCS <- procD.lm(coords~ lnCZB, data=CAP23.gdf, iter=10000, RRPP=TRUE, print.progress = FALSE) ##regression on of entire shape on log stem centroid size. Blade CS calculated below and then included in the "groups.csv"
+CAP23BCS.anova <- anova(CAP23BCS) #calculates the anova
+summary(CAP23BCS.anova) #summary of the ANOVA results against the null of isometric change
+```
+
+The Integration Test
+
+```{r}
+CAP23.inter <- integration.test(Z.gpa$coords[c(1:4,6:13),,], Z.gpa$coords[c(5,14:23),,], iter=999, print.progress = FALSE) # divide entire shape into stem and blade modules
+summary(CAP23.inter) #provides r-PLS score
+plot(CAP23.inter) #plots PLS Blocks 1 and 2, not included as a figure
+```
+
+The Modularity Test and Figure 7
+
+```{r}
+CAP.gps <- c("A","A","A","A","B","A","A","A","A","A","A","A","A","B","B","B","B","B","B","B","B","B","B") # makes stem(A) and Blade(B) modules
+modularity.test(Z.gpa$coords, CAP.gps, iter=999, print.progress = FALSE) #calculates CR statistic
+CAP23.mod <- modularity.test(Z.gpa$coords, CAP.gps, iter=999, print.progress = FALSE) #creates object for histogram
+
+hist(CAP23.mod$random.CR,xlim = c(0.96, 1.09), xlab="CR Coefficient", main="CR Coefficient Distribution", col="gray") #histogram showing CR results. The "hist" function allows scale changes on X axis
+abline(v = 1.0064,col="red") #abcissa line [Figure 7]
+```
+
+Analyses on just the Clovis Point Stems using the non-cache points
+
+Preliminaries
+
+```{r}
+#The following analyses concern the Clovis stems. The stem shape is excerpted from the overall shape after GPA by deleting the LMs making up the blade shape.
+
+CAPS12Other<-readland.tps("CAP23 NonCache.tps", specID = "ID") #creates new file with 23LM tps Non-Cache data
+
+CAPSt12O.gpa<-gpagen(CAPS12Other) #Procrustes alignment renamed as CAP23O.gpa
+
+groupsNC<-read.csv("APF Cache Other.csv",header=TRUE,stringsAsFactors = TRUE) #reads in the same classifier data with 75 non-cache points
+
+CAPST12O.gdf<- geomorph.data.frame(CAPSt12O.gpa) #creates a dataframe from the 23LM gpagen output
+
+CAPST12O.gdf<-append(CAPST12O.gdf, groupsNC) #appends groups factors to the dataframe created from CAP23.gfa, keeps same name
+
+CAPST12O.gdf$lnSCS <- log(CAPST12O.gdf$Csize) #create new column with natural log of entire point centroid size
+
+omit <- c(5,14:23)# creates file of LMs (named "omit") to delete the blade LMs from the aligned entire shape
+SS<-CAPST12O.gdf$coords[-omit,,]# omits blade LMs coords list and creates stem file SS
+CAPST12O.gdf$coords<-SS #replaces original coords file with stem file SS
+
+CAPST12O.gdf$lnCZS <- log(CAPST12O.gdf$StemCZ)#create new column with natural log of entire point centroid size
+```
+
+Creating the Mean Shape of the Stem (not used as a figure)
+
+```{r}
+MeanStem <- mshape(CAPST12O.gdf$coords) #creates object from meanshape of stem
+#MSL<-define.links(MeanStem) #interactive funtion (disabled) creates links file 
+MSL <- read.csv("MSL.csv")
+CAPST12O.gdf<-append(CAPST12O.gdf, MSL) #appends links file MSL
+plot(MeanStem, links=MSL) #plot LM numbers on mean shape with links
+```
+
+Plot of the distribution of 75 non-cache Clovis points around the stem LMs (not used as a figure)
+
+```{r}
+plotAllSpecimens(CAPST12O.gdf$coords, mean=TRUE, links=MSL, plot.param = list(pt.cex=.6))#plots distribution of 75 points on the mean stem shape   
+```
+
+Vector displacement on just the stem to large Clovis point (Figure 6B)
+
+```{r}
+plotRefToTarget(MeanStem, CAPST12O.gdf$coords[,,11], links=MSL, method="vector") #vector displacement from mean to specimen 11, a large Clovis point [Figure 7B]
+#mtext("Vector Displacement") #plot title disabled
+```
+
+The ANOVA results for stem shape by size-class (table 4)
+
+```{r}
+fitSO <- procD.lm(coords ~ ClassO, data = CAPST12O.gdf, print.progress = FALSE) #Comparison of Stem shape by size-class
+anova(fitSO) #Results show no difference among size classes
+```
+
+The ANOVA results for stem shape on log normal for stem centroid size, width, and length (table 4)
+
+```{r}
+fitSOCZ <- procD.lm(coords ~ lnCZS, data = CAPST12O.gdf, print.progress = FALSE) #regression of stem shape on ln stem centroid size
+anova(fitSOCZ) #Results show significant differences 
+
+fitSASW <-  procD.lm(coords~ log(StemW), data=CAPST12O.gdf, iter=999, RRPP=TRUE, print.progress = FALSE) #regression on ln stem width
+anova(fitSASW)
+
+fitSASL <-  procD.lm(coords~ log(StemL), data=CAPST12O.gdf, iter=999, RRPP=TRUE, print.progress = FALSE) #regression on log stem length
+anova(fitSASL)
+```
+
+Bivariate plot of Stem Width and Stem Length (figure 8)
+
+```{r}
+attach(CAPST12O.gdf)
+
+par(mfcol = c(1,1))
+#Figure 7
+plot(groups[,3:4],xaxt="none",yaxt="none", xlab="", ylab="")#sets plot box and 75 points
+axis(1,seq(0,50,5)) #defines x-axis
+axis(2,seq(0,40,5),las=2) #defines y-axis
+#mtext(side=3, line=0.2,"Scatterplot Stem Width and Length", font=2, cex=1.5) #plot title, disabled
+minor.tick(nx = 10, ny = 5, tick.ratio=0.5) #minor ticks on axis, size and number
+title(ylab="Stem Width", line=2.25) #y-axis label, size and position
+title(xlab="Stem Length",line=2.25) #x-axis label, size and position
+rect(10.5,12.5,26.5,18.5) # lower rectangle
+rect(12.5,19.5,37.5,26.5) # middle rectangle
+rect(19.5,26.5,46.5,34) # upper rectangle
+points(groups[which(ClassO2=="S"),3:4],pch=21,cex=1,col="blue",bg="blue") #color and shape of small size class
+points(groups[which(ClassO2=="M"),3:4],pch=22,cex=1,col="green",bg="green") #color and shape of medium size class
+points(groups[which(ClassO2=="L"),3:4],pch=24,cex=1,col="red",bg="red") #color and shape of large size class
+points(groups[which(ClassO2=="BWM"),3:4],pch=5,cex=1,col="black") #shapes for small BWD points
+points(groups[which(ClassO2=="CBY"),3:4],pch=3,cex=1,col="black") #shape for large Colby point
+```
+
+Bivariate plot of Stem Width and Blade Length (figure 9)
+
+```{r}
+plot(groups[,5:4],xaxt="none",yaxt="none", xlab="", ylab="")
+axis(1,seq(15,90,5))
+axis(2,seq(0,40,5),las=2)
+#mtext(side=3, line=0.2,"Scatterplot Stem Width and Blade Length", font=2, cex=1.5)
+minor.tick(nx = 10, ny = 5, tick.ratio=0.5)
+title(ylab="Stem Width", line=2.25)
+title(xlab="Blade Length",line=2.25)
+rect(18.5,12.5,49,18.5)
+rect(21.5,19.5,89,26.5)
+rect(43.5,26.5,89,34)
+points(groups[which(ClassO2=="S"),5:4],pch=21,cex=1,col="blue",bg="blue")
+points(groups[which(ClassO2=="M"),5:4],pch=22,cex=1,col="green",bg="green")
+points(groups[which(ClassO2=="L"),5:4],pch=24,cex=1,col="red",bg="red")
+points(groups[which(ClassO2=="BWM"),5:4],pch=5,cex=1,col="black")
+points(groups[which(ClassO2=="CBY"),5:4],pch=3,cex=1,col="black")
+```
+
+Bivariate plot of Stem Length and Blade Length (figure 10)
+
+```{r}
+plot(groups[,c(5,3)],xaxt="none",yaxt="none", xlab="", ylab="")
+axis(1,seq(15,90,5))
+axis(2,seq(0,50,5),las=2)
+#mtext(side=3, line=0.2,"Scatterplot Stem Length and Blade Length", font=2, cex=1.5)
+minor.tick(nx = 10, ny = 10, tick.ratio=0.5)
+title(ylab="Stem Length", line=2.25)
+title(xlab="Blade Length",line=2.25)
+rect(18.5,10.25,44.5,19.5)
+rect(28.25,19.5,89,46.75)
+points(groups[which(ClassO2=="S"),c(5,3)],pch=21,cex=1,col="blue",bg="blue")
+points(groups[which(ClassO2=="M"),c(5,3)],pch=22,cex=1,col="green",bg="green")
+points(groups[which(ClassO2=="L"),c(5,3)],pch=24,cex=1,col="red",bg="red")
+points(groups[which(ClassO2=="BWM"),c(5,3)],pch=5,cex=1,col="black")
+points(groups[which(ClassO2=="CBY"),c(5,3)],pch=3,cex=1,col="black")
+```
+
+Generating Stem and Blade Centroid Sizes
+
+```{r}
+CAPSCZ<-readland.tps("CAPStem12.tps", specID = "ID") #creates new file with 12LM tps for stem. tps file created un tpsUtil.
+CAP12SCZ<-gpagen(CAPSCZ) #Procrustes alignment renamed as CAP12SCZ.gpa
+CAP12SCZ$Csize #list of stem centroid sizes. List included in groups csv file
+
+
+CAPBCZ<-readland.tps("CAPBlade11.tps", specID = "ID") #creates new file with 12LM tps for stem. tps file created un tpsUtil.
+CAP11BCZ<-gpagen(CAPBCZ) #Procrustes alignment renamed as CAP12SCZ.gpa
+CAP11BCZ$Csize #list of blade centroid sizes. List included in groups csv file
+```
+
+END
