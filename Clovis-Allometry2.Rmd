@@ -2,7 +2,7 @@
 title: "Clovis Allometry"
 author: "David K. Thulman"
 date: "5/15/2020"
-output: html_document
+output: github_document
 ---
 This R code creates most of the figures and tables in the Clovis Point Allometry: Exploring Shape Variation with Landmark-based Geometric Morphometrics. 
 
