@@ -1,0 +1,37 @@
+---
+title: "test plot"
+author: "David K. Thulman"
+date: "5/19/2020"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(Hmisc)
+
+data<-read.csv("APF Cache Other.csv",header=TRUE,stringsAsFactors = TRUE) #reads in the same 
+```
+
+```{r}
+
+#Figure 7
+plot(data[,3:4],xaxt="none",yaxt="none", xlab="", ylab="")#sets plot box and 75 points
+axis(1,seq(0,50,5)) #defines x-axis
+axis(2,seq(0,40,5),las=2) #defines y-axis
+#mtext(side=3, line=0.2,"Scatterplot Stem Width and Length", font=2, cex=1.5) #plot title, disabled
+minor.tick(nx = 10, ny = 5, tick.ratio=0.5) #minor ticks on axis, size and number
+title(ylab="Stem Width", line=2.25) #y-axis label, size and position
+title(xlab="Stem Length",line=2.25) #x-axis label, size and position
+rect(10.5,12.5,26.5,18.5) # lower rectangle
+rect(12.5,19.5,37.5,26.5) # middle rectangle
+rect(19.5,26.5,46.5,34) # upper rectangle
+points(data[which(ClassX2=="S"),3:4],pch=21,cex=1,col="blue",bg="blue") #color and shape of small size class
+points(data[which(ClassO2=="M"),3:4],pch=22,cex=1,col="green",bg="green") #color and shape of medium size class
+points(data[which(ClassO2=="L"),3:4],pch=24,cex=1,col="red",bg="red") #color and shape of large size class
+points(data[which(ClassO2=="BWM"),3:4],pch=5,cex=1,col="black") #shapes for small BWD points
+points(data[which(ClassO2=="CBY"),3:4],pch=3,cex=1,col="black") #shape for large Colby point
+```

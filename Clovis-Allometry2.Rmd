@@ -15,7 +15,7 @@ library(Hmisc)
 Now, set the working directory to the GitHub repository: https://github.com/dktArcoop/Clovis-Allometry-Files
 
 ```{r}
-setwd("D:/Documents/Analysis V/Allometry Project Final Images")
+setwd(getwd())
 ```
 
 The first step is to set up the background files in geomorph. These first files will be the tps file for the 23 Landmark (LM) configuration, which is aligned with a GPA and converted into a geomorph dataframe. Second, a csv file will be uploaded and appended to the dataframe. The natural logs for several measurements will created in the dataframe. 
