@@ -4,7 +4,7 @@ author: "David K. Thulman"
 date: "5/15/2020"
 output: github_document
 ---
-This R code creates most of the figures and tables in the Clovis Point Allometry: Exploring Shape Variation with Landmark-based Geometric Morphometrics. 
+This R code creates most of the figures and tables in the manuscript "Clovis Point Allometry: Exploring Shape Variation with Landmark-based Geometric Morphometrics." 
 
 It uses two packages beyond the basic R packages: (1) geomorph and (2) Hmisc. To start, load those packages.
 
@@ -21,7 +21,7 @@ setwd(getwd())
 The first step is to set up the background files in geomorph. These first files will be the tps file for the 23 Landmark (LM) configuration, which is aligned with a GPA and converted into a geomorph dataframe. Second, a csv file will be uploaded and appended to the dataframe. The natural logs for several measurements will created in the dataframe. 
 
 ```{r}
-CAP23<-readland.tps("CAP23.tps", specID = "ID") #creates new file with 23LM tps data
+CAP23<-readland.tps("CAP23.tps", specID = "ID") #creates new dataframe with 23LM tps data
 
 Z.gpa<-gpagen(CAP23) #Procrustes alignment renamed as Z.gpa
 
@@ -190,7 +190,7 @@ attach(CAPST12O.gdf)
 
 par(mfcol = c(1,1))
 #Figure 7
-plot(groups[,3:4],xaxt="none",yaxt="none", xlab="", ylab="")#sets plot box and 75 points
+plot(NCgroups[,3:4],xaxt="none",yaxt="none", xlab="", ylab="")#sets plot box and 75 points
 axis(1,seq(0,50,5)) #defines x-axis
 axis(2,seq(0,40,5),las=2) #defines y-axis
 #mtext(side=3, line=0.2,"Scatterplot Stem Width and Length", font=2, cex=1.5) #plot title, disabled
@@ -200,17 +200,17 @@ title(xlab="Stem Length",line=2.25) #x-axis label, size and position
 rect(10.5,12.5,26.5,18.5) # lower rectangle
 rect(12.5,19.5,37.5,26.5) # middle rectangle
 rect(19.5,26.5,46.5,34) # upper rectangle
-points(groups[which(ClassO2=="S"),3:4],pch=21,cex=1,col="blue",bg="blue") #color and shape of small size class
-points(groups[which(ClassO2=="M"),3:4],pch=22,cex=1,col="green",bg="green") #color and shape of medium size class
-points(groups[which(ClassO2=="L"),3:4],pch=24,cex=1,col="red",bg="red") #color and shape of large size class
-points(groups[which(ClassO2=="BWM"),3:4],pch=5,cex=1,col="black") #shapes for small BWD points
-points(groups[which(ClassO2=="CBY"),3:4],pch=3,cex=1,col="black") #shape for large Colby point
+points(NCgroups[which(ClassO2=="S"),3:4],pch=21,cex=1,col="blue",bg="blue") #color and shape of small size class
+points(NCgroups[which(ClassO2=="M"),3:4],pch=22,cex=1,col="green",bg="green") #color and shape of medium size class
+points(NCgroups[which(ClassO2=="L"),3:4],pch=24,cex=1,col="red",bg="red") #color and shape of large size class
+points(NCgroups[which(ClassO2=="BWM"),3:4],pch=5,cex=1,col="black") #shapes for small BWD points
+points(NCgroups[which(ClassO2=="CBY"),3:4],pch=3,cex=1,col="black") #shape for large Colby point
 ```
 
 Bivariate plot of Stem Width and Blade Length (figure 9)
 
 ```{r}
-plot(groups[,5:4],xaxt="none",yaxt="none", xlab="", ylab="")
+plot(NCgroups[,5:4],xaxt="none",yaxt="none", xlab="", ylab="")
 axis(1,seq(15,90,5))
 axis(2,seq(0,40,5),las=2)
 #mtext(side=3, line=0.2,"Scatterplot Stem Width and Blade Length", font=2, cex=1.5)
@@ -220,17 +220,17 @@ title(xlab="Blade Length",line=2.25)
 rect(18.5,12.5,49,18.5)
 rect(21.5,19.5,89,26.5)
 rect(43.5,26.5,89,34)
-points(groups[which(ClassO2=="S"),5:4],pch=21,cex=1,col="blue",bg="blue")
-points(groups[which(ClassO2=="M"),5:4],pch=22,cex=1,col="green",bg="green")
-points(groups[which(ClassO2=="L"),5:4],pch=24,cex=1,col="red",bg="red")
-points(groups[which(ClassO2=="BWM"),5:4],pch=5,cex=1,col="black")
-points(groups[which(ClassO2=="CBY"),5:4],pch=3,cex=1,col="black")
+points(NCgroups[which(ClassO2=="S"),5:4],pch=21,cex=1,col="blue",bg="blue")
+points(NCgroups[which(ClassO2=="M"),5:4],pch=22,cex=1,col="green",bg="green")
+points(NCgroups[which(ClassO2=="L"),5:4],pch=24,cex=1,col="red",bg="red")
+points(NCgroups[which(ClassO2=="BWM"),5:4],pch=5,cex=1,col="black")
+points(NCgroups[which(ClassO2=="CBY"),5:4],pch=3,cex=1,col="black")
 ```
 
 Bivariate plot of Stem Length and Blade Length (figure 10)
 
 ```{r}
-plot(groups[,c(5,3)],xaxt="none",yaxt="none", xlab="", ylab="")
+plot(NCgroups[,c(5,3)],xaxt="none",yaxt="none", xlab="", ylab="")
 axis(1,seq(15,90,5))
 axis(2,seq(0,50,5),las=2)
 #mtext(side=3, line=0.2,"Scatterplot Stem Length and Blade Length", font=2, cex=1.5)
@@ -239,11 +239,11 @@ title(ylab="Stem Length", line=2.25)
 title(xlab="Blade Length",line=2.25)
 rect(18.5,10.25,44.5,19.5)
 rect(28.25,19.5,89,46.75)
-points(groups[which(ClassO2=="S"),c(5,3)],pch=21,cex=1,col="blue",bg="blue")
-points(groups[which(ClassO2=="M"),c(5,3)],pch=22,cex=1,col="green",bg="green")
-points(groups[which(ClassO2=="L"),c(5,3)],pch=24,cex=1,col="red",bg="red")
-points(groups[which(ClassO2=="BWM"),c(5,3)],pch=5,cex=1,col="black")
-points(groups[which(ClassO2=="CBY"),c(5,3)],pch=3,cex=1,col="black")
+points(NCgroups[which(ClassO2=="S"),c(5,3)],pch=21,cex=1,col="blue",bg="blue")
+points(NCgroups[which(ClassO2=="M"),c(5,3)],pch=22,cex=1,col="green",bg="green")
+points(NCgroups[which(ClassO2=="L"),c(5,3)],pch=24,cex=1,col="red",bg="red")
+points(NCgroups[which(ClassO2=="BWM"),c(5,3)],pch=5,cex=1,col="black")
+points(NCgroups[which(ClassO2=="CBY"),c(5,3)],pch=3,cex=1,col="black")
 ```
 
 Generating Stem and Blade Centroid Sizes
